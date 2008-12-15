@@ -64,11 +64,11 @@ class SslRequirementTest < Test::Unit::TestCase
     assert_equal "bar", flash[:foo]
   end
   
-  def test_not_redirecting_to_https_does_not_preserve_the_flash
+  def test_not_redirecting_to_https_preserves_the_flash
     get :set_flash
     get :d
     assert_response :success
-    assert_nil flash[:foo]
+    assert_equal "bar", flash[:foo]
   end
   
   def test_redirect_to_http_preserves_flash
@@ -79,12 +79,12 @@ class SslRequirementTest < Test::Unit::TestCase
     assert_equal "bar", flash[:foo]
   end
   
-  def test_not_redirecting_to_http_does_not_preserve_the_flash
+  def test_not_redirecting_to_http_preserves_the_flash
     get :set_flash
     @request.env['HTTPS'] = "on"
     get :a
     assert_response :success
-    assert_nil flash[:foo]
+    assert_equal "bar", flash[:foo]
   end
   
   def test_required_without_ssl
