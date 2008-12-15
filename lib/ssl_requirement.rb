@@ -19,6 +19,23 @@
 # OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 module SslRequirement
+  module AlwaysRequired
+    protected
+    def ssl_required?
+      true
+    end
+  end
+  
+  module AlwaysAllowed
+    protected
+    def ssl_allowed?
+      true
+    end
+  end
+  
+  mattr_accessor :ssl_host
+  mattr_accessor :non_ssl_host
+  
   def self.included(controller)
     controller.extend(ClassMethods)
     controller.before_filter(:ensure_proper_protocol)
@@ -50,11 +67,11 @@ module SslRequirement
       return true if ssl_allowed?
 
       if ssl_required? && !request.ssl?
-        redirect_to "https://" + request.host + request.request_uri
+        redirect_to "https://" + (ssl_host || request.host) + request.request_uri
         flash.keep
         return false
       elsif request.ssl? && !ssl_required?
-        redirect_to "http://" + request.host + request.request_uri
+        redirect_to "http://" + (non_ssl_host || request.host) + request.request_uri
         flash.keep
         return false
       end
