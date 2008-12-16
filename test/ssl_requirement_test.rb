@@ -50,6 +50,27 @@ class SslRequirementController < ActionController::Base
   end
 end
 
+class SslHostRequirementController < ActionController::Base
+  include SslRequirement
+  
+  self.ssl_host = "secure.example.com"
+  self.non_ssl_host = "www.example.com"
+  
+  ssl_required :a
+  
+  def a
+    render :nothing => true
+  end
+  
+  def d
+    render :nothing => true
+  end
+  
+end
+
+class SslHostDescendant < SslHostRequirementController
+end
+
 class SslRequirementTest < Test::Unit::TestCase
   def setup
     @controller = SslRequirementController.new
@@ -129,4 +150,34 @@ class SslRequirementTest < Test::Unit::TestCase
     get :c
     assert_response :success
   end
+
+  def test_redirects_to_ssl_host
+    @controller = SslHostRequirementController.new
+    get :a
+    assert_response :redirect
+    assert_match %r{^https://secure.example.com}, @response.headers['Location']
+  end
+  
+  def test_redirects_to_non_ssl_host
+    @controller = SslHostRequirementController.new
+    @request.env['HTTPS'] = "on"
+    get :d
+    assert_response :redirect
+    assert_match %r{^http://www.example.com}, @response.headers['Location']
+  end
+  
+  def test_descendant_controller_inerherits_host_setting
+    @controller = SslHostDescendant.new
+    get :a
+    assert_response :redirect
+    assert_match %r{^https://secure.example.com}, @response.headers['Location']
+  end
+  
+  def test_ancestor_controller_does_not_inherit_host_setting
+    get :a
+    assert_response :redirect
+    assert_no_match %r{^https://secure.example.com}, @response.headers['Location']
+  end
 end
+
+
