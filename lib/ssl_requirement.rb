@@ -33,12 +33,11 @@ module SslRequirement
     end
   end
   
-  mattr_accessor :ssl_host
-  mattr_accessor :non_ssl_host
-  
   def self.included(controller)
     controller.extend(ClassMethods)
     controller.before_filter(:ensure_proper_protocol)
+    controller.cattr_accessor(:ssl_host)
+    controller.cattr_accessor(:non_ssl_host)
   end
 
   module ClassMethods
